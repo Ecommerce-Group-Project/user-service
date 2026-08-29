@@ -25,4 +25,6 @@ public class User {
     @Builder.Default
     private Role role = Role.ROLE_DEFAULT;
 
+
+
 }

@@ -8,6 +8,10 @@ import com.ecommerce.userservice.entity.User;
 import com.ecommerce.userservice.repository.UserRepository;
 import com.ecommerce.userservice.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,10 +21,12 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final AuthenticationManager authenticationManager;
 
 
     @Autowired
-    public AuthService(JwtUtil jwtUtil, PasswordEncoder passwordEncoder, UserRepository userRepository) {
+    public AuthService(JwtUtil jwtUtil, PasswordEncoder passwordEncoder, UserRepository userRepository, AuthenticationManager authenticationManager) {
+        this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
@@ -42,16 +48,19 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest loginRequest){
-        User user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+        // 1. The Bouncer: This single line calls loadUserByUsername, checks the password hash,
+        //    and verifies the account isn't locked. If it fails, it throws a BadCredentialsException.
+           Authentication authentication = authenticationManager.authenticate(
+                   new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
+           );
 
-        if(!passwordEncoder.matches(loginRequest.getPassword(),user.getPassword())){
-            throw new RuntimeException("Invalid credentials");
-        }
+        // 2. If we reach this line, the user is 100% authenticated.
+        // We just fetch the user from the DB one more time to grab their ID and Role for the JWT payload.
+           User user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow(()-> new UsernameNotFoundException("User not found"));
 
-        String token = jwtUtil.generateToken(user.getId(),user.getRole().name());
+           String token = jwtUtil.generateToken(user.getId(), user.getRole().name());
 
-        return new AuthResponse(token);
+           return new AuthResponse(token);
     }
 
 
