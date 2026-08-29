@@ -1,0 +1,12 @@
+1. Frontend Button Click
+   └─► User browser navigates to:
+       http://localhost:8080/oauth2/authorization/google (Backend)
+
+2. Backend sends user to Google consent screen
+
+3. User signs in on Google
+   └─► Google redirects browser back to:
+       http://localhost:8080/login/oauth2/code/google (Backend - for verification)
+
+4. Backend mints your JWT and redirects browser to:
+   └─► http://localhost:3000/oauth2/callback?token=eyJhbGci... (Frontend)
