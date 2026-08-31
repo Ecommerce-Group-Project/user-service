@@ -2,6 +2,9 @@ package com.ecommerce.userservice.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -14,6 +17,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String name;
+
     @Column(unique = true,nullable = false)
     private String email;
 
@@ -23,7 +28,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private Role role = Role.ROLE_DEFAULT;
+    private List<Role> roles = new ArrayList<>(List.of(Role.ROLE_DEFAULT));
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

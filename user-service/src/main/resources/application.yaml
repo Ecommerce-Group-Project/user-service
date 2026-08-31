@@ -28,9 +28,17 @@ spring:
             # callback route like we do in node.js
             redirectUri: "{baseUrl}/login/oauth2/code/{registrationId}"
 
-jwt:
+access-token:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-  expiration: 60000
+  ttl-ms: 60000
+  cookie-name: access_token
+  cookie-secure: false
+
+refresh-token:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  ttl-ms: 60000
+  cookie-name: refresh_token
+  cookie-secure: false
 
 frontend:
-  redirect-url: "${FRONTEND_URL}/login/oauth2/code/google"
+  redirect-url: "${FRONTEND_URL}/login"

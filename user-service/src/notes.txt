@@ -10,3 +10,26 @@
 
 4. Backend mints your JWT and redirects browser to:
    └─► http://localhost:3000/oauth2/callback?token=eyJhbGci... (Frontend)
+
+
+
+
+
+
+{
+  message: "Request failed with status code 500",
+  code: "ERR_BAD_RESPONSE",
+  response: {
+    status: 500,
+    statusText: "Internal Server Error",
+    headers: { ... },
+    data: {
+      status: 500,
+      message: "Something went wrong. Please try again later.",
+      path: "/api/login",
+      errors: []
+    }
+  },
+  request: { ... },
+  config: { ... }
+}

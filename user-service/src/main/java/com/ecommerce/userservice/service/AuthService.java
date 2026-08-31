@@ -15,6 +15,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 public class AuthService {
 
@@ -38,6 +40,7 @@ public class AuthService {
         }
 
         User user = User.builder()
+                .name(registerRequest.getName())
                 .email(registerRequest.getEmail())
                 .password(passwordEncoder.encode(registerRequest.getPassword()))
                 .build();
@@ -47,8 +50,8 @@ public class AuthService {
         return "User registered successfully";
     }
 
-    public AuthResponse login(LoginRequest loginRequest){
-        // 1. The Bouncer: This single line calls loadUserByUsername, checks the password hash,
+    public Map<String,Object> login(LoginRequest loginRequest){
+        // 1. The Bouncer: This single line calls CustomUserDetailsService.loadUserByUsername, checks the password hash,
         //    and verifies the account isn't locked. If it fails, it throws a BadCredentialsException.
            Authentication authentication = authenticationManager.authenticate(
                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
@@ -58,9 +61,9 @@ public class AuthService {
         // We just fetch the user from the DB one more time to grab their ID and Role for the JWT payload.
            User user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow(()-> new UsernameNotFoundException("User not found"));
 
-           String token = jwtUtil.generateToken(user.getId(), user.getRole().name());
+           String token = jwtUtil.generateToken(user.getId(), user.getRoles());
 
-           return new AuthResponse(token);
+           return Map.of("token", token,"user",user);
     }
 
 

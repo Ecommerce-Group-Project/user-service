@@ -1,13 +1,20 @@
 package com.ecommerce.userservice.dto;
 
+import com.ecommerce.userservice.entity.Role;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
-@Data
-public class AuthResponse {
-    private String token;
-    private String type = "Bearer";
+import java.util.List;
 
-    public AuthResponse(String token) {
-        this.token = token;
-    }
+@Data
+@AllArgsConstructor
+@Builder
+public class AuthResponse {
+    private Long id;
+    private String email;
+    private String name;
+    private List<Role> roles;
+
+
 }

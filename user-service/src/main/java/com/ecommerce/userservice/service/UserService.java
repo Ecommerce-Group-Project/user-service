@@ -23,7 +23,8 @@ public class UserService {
         return ProfileResponse
                 .builder()
                 .email(userDetails.getEmail())
-                .role(userDetails.getRole().name())
+                .roles(userDetails.getRoles())
+                .name(userDetails.getName())
                 .build();
     }
 

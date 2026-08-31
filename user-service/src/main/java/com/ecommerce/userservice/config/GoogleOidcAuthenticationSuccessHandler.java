@@ -1,14 +1,17 @@
 package com.ecommerce.userservice.config;
 
 
+import com.ecommerce.userservice.entity.AuthProvider;
 import com.ecommerce.userservice.entity.User;
 import com.ecommerce.userservice.repository.UserRepository;
+import com.ecommerce.userservice.service.AuthCookieService;
 import com.ecommerce.userservice.util.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -22,14 +25,16 @@ public class GoogleOidcAuthenticationSuccessHandler implements AuthenticationSuc
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private final AuthCookieService authCookieService;
 
     @Value("${frontend.redirect-url")
     private String frontendRedirectUrl;
 
     @Autowired
-    public GoogleOidcAuthenticationSuccessHandler(UserRepository userRepository, JwtUtil jwtUtil) {
+    public GoogleOidcAuthenticationSuccessHandler(UserRepository userRepository, JwtUtil jwtUtil,AuthCookieService authCookieService) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
+        this.authCookieService = authCookieService;
     }
 
     @Override
@@ -44,21 +49,22 @@ public class GoogleOidcAuthenticationSuccessHandler implements AuthenticationSuc
 
         OidcIdToken idToken = oidcUser.getIdToken();
         String email = idToken.getEmail();
+        String name = idToken.getClaim("name");
 
         User user = userRepository.findByEmail(email).orElseGet(()->{
             User newUser = User.builder()
+                    .name(name)
                     .email(email)
+                    .authProvider(AuthProvider.GOOGLE)
                     .build();
             return userRepository.save(newUser);
         });
 
-        String appJwtToken = jwtUtil.generateToken(user.getId(), user.getRole().name());
+        String appAccessToken = jwtUtil.generateToken(user.getId(), user.getRoles());
+        ResponseCookie authCookie = authCookieService.createAccessCookie(appAccessToken);
 
-        response.sendRedirect(frontendRedirectUrl+"?token="+appJwtToken);
-
-
-
-
+        response.addHeader("Set-Cookie",authCookie.toString());
+        response.sendRedirect(frontendRedirectUrl);
 
 
 

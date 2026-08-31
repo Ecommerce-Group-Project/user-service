@@ -1,5 +1,6 @@
 package com.ecommerce.userservice.util;
 
+import com.ecommerce.userservice.entity.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -10,16 +11,17 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.Map;
+import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
+    @Value("${access-token.secret}")
     private String secret;
 
-    @Value("${jwt.expiration}")
+    @Value("${access-token.ttl-ms}")
     private long jwtExpiration;
 
     /**
@@ -34,12 +36,12 @@ public class JwtUtil {
         return new SecretKeySpec(keyBytes, "HmacSHA256");
     }
 
-    public String generateToken(Long userId, String role){
+    public String generateToken(Long userId, List<Role> roles){
+
+        String roleList = roles.stream().map((role)->role.name()).collect(Collectors.joining(","));
 
         return Jwts.builder()
-                .claims(Map.of(
-                        "role",role
-                ))
+                .claim("roles",roleList)
                 .subject(userId.toString())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
@@ -77,8 +79,10 @@ public class JwtUtil {
         return Long.parseLong(extractClaim(token, Claims::getSubject));
     }
 
-    public String extractRole(String token){
-        return extractAllClaims(token).get("role",String.class);
+    public List<String> extractRoles(String token){
+        String roles = extractAllClaims(token).get("roles",String.class);
+
+        return List.of(roles.split(","));
     }
 
 
