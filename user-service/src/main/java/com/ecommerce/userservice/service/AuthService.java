@@ -1,7 +1,6 @@
 package com.ecommerce.userservice.service;
 
 
-import com.ecommerce.userservice.dto.AuthResponse;
 import com.ecommerce.userservice.dto.LoginRequest;
 import com.ecommerce.userservice.dto.RegisterRequest;
 import com.ecommerce.userservice.entity.User;

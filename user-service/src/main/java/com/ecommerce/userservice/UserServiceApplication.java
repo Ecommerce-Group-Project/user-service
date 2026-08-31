@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class UserServiceApplication {
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         io.github.cdimascio.dotenv.Dotenv.load();
         SpringApplication.run(UserServiceApplication.class, args);
     }
