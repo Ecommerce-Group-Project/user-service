@@ -2,6 +2,7 @@ package com.ecommerce.userservice.controller;
 
 
 import com.ecommerce.userservice.dto.AuthResponse;
+import com.ecommerce.userservice.dto.CurrentUser;
 import com.ecommerce.userservice.dto.LoginRequest;
 import com.ecommerce.userservice.dto.RegisterRequest;
 import com.ecommerce.userservice.entity.User;
@@ -9,12 +10,11 @@ import com.ecommerce.userservice.service.AuthCookieService;
 import com.ecommerce.userservice.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -60,6 +60,28 @@ public class AuthController {
                 .body(authResponse);
 
 
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<AuthResponse> me(@AuthenticationPrincipal CurrentUser currentUser){
+        if(currentUser == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        AuthResponse authResponse = AuthResponse.builder()
+                .id(currentUser.getId())
+                .name(currentUser.getName())
+                .email(currentUser.getEmail())
+                .roles(currentUser.getRoles())
+                .build();
+
+        return ResponseEntity.ok(authResponse);
+
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(){
+        return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE,authCookieService.clear().toString()).build();
     }
 
 }

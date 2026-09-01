@@ -32,6 +32,7 @@ public class AuthCookieService {
         return ResponseCookie.from(AUTH_COOKIE_NAME,accessToken)
                 .httpOnly(true)
                 .sameSite("Lax")
+                .path("/")
                 .secure(accessSecure)
                 .maxAge(accessTtlMs)
                 .build();
@@ -42,6 +43,7 @@ public class AuthCookieService {
         return ResponseCookie.from(REFRESH_COOKIE_NAME,refreshToken)
                 .httpOnly(true)
                 .sameSite("Lax")
+                .path("/")
                 .secure(refreshSecure)
                 .maxAge(Duration.ofMillis(refreshTtlMs))
                 .build();
@@ -49,8 +51,10 @@ public class AuthCookieService {
 
     public ResponseCookie clear() {
         return ResponseCookie.from(AUTH_COOKIE_NAME,"")
-                .httpOnly(accessSecure)
+                .httpOnly(true)
+                .secure(accessSecure)
                 .sameSite("Lax")
+                .path("/")
                 .maxAge(0)
                 .build();
     }

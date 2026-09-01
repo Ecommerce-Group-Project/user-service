@@ -60,7 +60,7 @@ public class AuthService {
         // We just fetch the user from the DB one more time to grab their ID and Role for the JWT payload.
            User user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow(()-> new UsernameNotFoundException("User not found"));
 
-           String token = jwtUtil.generateToken(user.getId(), user.getRoles());
+           String token = jwtUtil.generateToken(user.getId(), user.getName(),user.getEmail(),user.getRoles());
 
            return Map.of("token", token,"user",user);
     }

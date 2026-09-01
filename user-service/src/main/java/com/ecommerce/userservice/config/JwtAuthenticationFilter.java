@@ -1,6 +1,9 @@
 package com.ecommerce.userservice.config;
 
+import com.ecommerce.userservice.dto.CurrentUser;
+import com.ecommerce.userservice.entity.Role;
 import com.ecommerce.userservice.util.JwtUtil;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -55,21 +58,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = getTokenFromCookie(request);
 
-        if (token == null) {
+        if (token == null || SecurityContextHolder.getContext().getAuthentication() != null) {
             filterChain.doFilter(request, response);
             return;
         }
 
+        try{
+            if (jwtUtil.validateToken(token)) {
 
-        if (jwtUtil.validateToken(token)) {
-            Long  userId = jwtUtil.extractUserId(token);
-            List<SimpleGrantedAuthority> authorities = jwtUtil.extractRoles(token).stream().map((role)->new SimpleGrantedAuthority(role)).toList();
 
-            if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // Attach the email and authorities to Spring's SecurityContext
+                //Create an object name CurrentUser for AuthenticationPrincipal & Set it to SecurityContextHolder
+                List<String> roles = jwtUtil.extractRoles(token);
+
+                //AuthenticationPrincipal
+                CurrentUser currentUser = CurrentUser.builder()
+                        .id(jwtUtil.extractUserId(token))
+                        .email(jwtUtil.extractUserEmail(token))
+                        .name(jwtUtil.extractUserName(token))
+                        .roles(roles.stream().map((role)-> Role.valueOf(role)).toList())
+                        .build();
+
+                List<SimpleGrantedAuthority> authorities = roles.stream().map(SimpleGrantedAuthority::new).toList();
+
 
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userId,
+                        currentUser, //AuthenticationPrincipal
                         null,
                         authorities
                 );
@@ -77,11 +90,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
+
+        }catch (JwtException | IllegalArgumentException e){
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
     }
 
+    }
 
 
-}

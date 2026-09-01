@@ -36,12 +36,14 @@ public class JwtUtil {
         return new SecretKeySpec(keyBytes, "HmacSHA256");
     }
 
-    public String generateToken(Long userId, List<Role> roles){
+    public String generateToken(Long userId,String userName,String email,List<Role> roles){
 
         String roleList = roles.stream().map((role)->role.name()).collect(Collectors.joining(","));
 
         return Jwts.builder()
                 .claim("roles",roleList)
+                .claim("name",userName)
+                .claim("email",email)
                 .subject(userId.toString())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
@@ -74,6 +76,11 @@ public class JwtUtil {
                 .getPayload();
     }
 
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
 
     public Long extractUserId(String token){
         return Long.parseLong(extractClaim(token, Claims::getSubject));
@@ -85,11 +92,18 @@ public class JwtUtil {
         return List.of(roles.split(","));
     }
 
-
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+    public String extractUserEmail(String token){
+        return extractAllClaims(token).get("email",String.class);
     }
+
+    public String extractUserName(String token){
+        return extractAllClaims(token).get("name",String.class);
+    }
+
+
+
+
+
 
 
 

@@ -60,7 +60,7 @@ public class GoogleOidcAuthenticationSuccessHandler implements AuthenticationSuc
             return userRepository.save(newUser);
         });
 
-        String appAccessToken = jwtUtil.generateToken(user.getId(), user.getRoles());
+        String appAccessToken = jwtUtil.generateToken(user.getId(), user.getName(), user.getEmail(), user.getRoles());
         ResponseCookie authCookie = authCookieService.createAccessCookie(appAccessToken);
 
         response.addHeader("Set-Cookie",authCookie.toString());
