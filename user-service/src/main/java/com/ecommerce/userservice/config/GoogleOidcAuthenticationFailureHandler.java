@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class GoogleOidcAuthenticationFailureHandler implements AuthenticationFailureHandler {
 
-    @Value("${frontend.redirect-url}")
+    @Value("${frontend.failure-redirect-url}")
     private String frontendRedirectUrl;
 
     @Override
@@ -23,6 +23,7 @@ public class GoogleOidcAuthenticationFailureHandler implements AuthenticationFai
                                         AuthenticationException exception) throws IOException {
 
         String errorMessage = exception.getMessage();
+        System.out.println("Google OIDC Authentication Failure: " + errorMessage);
         String redirectUrl = frontendRedirectUrl + "?error=" +
                 URLEncoder.encode(errorMessage, StandardCharsets.UTF_8);
 

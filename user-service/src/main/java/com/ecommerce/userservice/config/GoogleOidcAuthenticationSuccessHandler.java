@@ -27,21 +27,21 @@ public class GoogleOidcAuthenticationSuccessHandler implements AuthenticationSuc
     private final JwtUtil jwtUtil;
     private final AuthCookieService authCookieService;
 
-    @Value("${frontend.redirect-url")
+    @Value("${frontend.success-redirect-url}")
     private String frontendRedirectUrl;
 
     @Autowired
-    public GoogleOidcAuthenticationSuccessHandler(UserRepository userRepository, JwtUtil jwtUtil,AuthCookieService authCookieService) {
+    public GoogleOidcAuthenticationSuccessHandler(UserRepository userRepository, JwtUtil jwtUtil, AuthCookieService authCookieService) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
         this.authCookieService = authCookieService;
     }
 
     @Override
-    public 	void onAuthenticationSuccess(HttpServletRequest request,
-                                           HttpServletResponse response,
+    public void onAuthenticationSuccess(HttpServletRequest request,
+                                        HttpServletResponse response,
 
-                                           Authentication authentication) throws IOException, ServletException{
+                                        Authentication authentication) throws IOException, ServletException {
 
         // 1. Because we used the "openid" scope, Spring returns an OidcUser, not a generic OAuth2User.
         // By the time this code runs, Spring has ALREADY verified the signature using Google's public keys.
@@ -51,7 +51,7 @@ public class GoogleOidcAuthenticationSuccessHandler implements AuthenticationSuc
         String email = idToken.getEmail();
         String name = idToken.getClaim("name");
 
-        User user = userRepository.findByEmail(email).orElseGet(()->{
+        User user = userRepository.findByEmail(email).orElseGet(() -> {
             User newUser = User.builder()
                     .name(name)
                     .email(email)
@@ -63,10 +63,8 @@ public class GoogleOidcAuthenticationSuccessHandler implements AuthenticationSuc
         String appAccessToken = jwtUtil.generateToken(user.getId(), user.getName(), user.getEmail(), user.getRoles());
         ResponseCookie authCookie = authCookieService.createAccessCookie(appAccessToken);
 
-        response.addHeader("Set-Cookie",authCookie.toString());
+        response.addHeader("Set-Cookie", authCookie.toString());
         response.sendRedirect(frontendRedirectUrl);
-
-
 
 
     }
