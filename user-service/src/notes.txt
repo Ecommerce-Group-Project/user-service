@@ -8,8 +8,6 @@
    └─► Google redirects browser back to:
        http://localhost:8080/login/oauth2/code/google (Backend - for verification)
 
-4. Backend mints your JWT and redirects browser to:
-   └─► http://localhost:3000/oauth2/callback?token=eyJhbGci... (Frontend)
 
 
 
@@ -33,3 +31,37 @@
   request: { ... },
   config: { ... }
 }
+
+
+SPRING ROUE to default authentication enrypoint when JWT is invalid
+
+JWT expires/invalid
+    ↓
+JwtAuthenticationFilter doesn't set authentication
+    ↓
+Spring Security sees: unauthenticated request
+    ↓
+Calls default AuthenticationEntryPoint
+    ↓
+oauth2Login() redirects to Google signin ❌
+
+
+
+
+
+
+
+
+
+
+
+### 401 Unauthorized situations
+
+1. **No JWT/token** when accessing a **protected endpoint**.
+2. **Expired JWT**.
+3. **Invalid JWT** — bad signature, malformed token, etc.
+
+
+### NOT 401
+
+* Valid JWT but insufficient role/authority → **403 Forbidden**.

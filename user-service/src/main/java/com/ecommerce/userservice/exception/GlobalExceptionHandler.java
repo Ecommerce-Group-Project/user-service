@@ -148,6 +148,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(UserAlreadyExistsException exception,HttpServletRequest request){
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                exception.getMessage(),
+                request.getRequestURI(),
+                List.of()
+        ));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception exception,
@@ -157,7 +169,7 @@ public class GlobalExceptionHandler {
 
         ErrorResponse response = buildErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "Something went wrong. Please try again later.",
+                exception.getMessage() !=null ? exception.getMessage() : "Something went wrong. Please try again later.",
                 request.getRequestURI(),
                 List.of()
         );

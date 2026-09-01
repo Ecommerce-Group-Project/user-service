@@ -1,6 +1,7 @@
 package com.ecommerce.userservice.controller;
 
 
+import com.ecommerce.userservice.dto.CurrentUser;
 import com.ecommerce.userservice.dto.ProfileResponse;
 import com.ecommerce.userservice.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ProfileResponse> getProfile(@AuthenticationPrincipal Long userId){
-        return ResponseEntity.ok(userService.getProfileData(userId));
+    public ResponseEntity<ProfileResponse> getProfile(@AuthenticationPrincipal CurrentUser currentUser){
+        return ResponseEntity.ok(userService.getProfileData(currentUser.getId()));
     }
 }

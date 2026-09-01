@@ -4,6 +4,7 @@ package com.ecommerce.userservice.service;
 import com.ecommerce.userservice.dto.LoginRequest;
 import com.ecommerce.userservice.dto.RegisterRequest;
 import com.ecommerce.userservice.entity.User;
+import com.ecommerce.userservice.exception.UserAlreadyExistsException;
 import com.ecommerce.userservice.repository.UserRepository;
 import com.ecommerce.userservice.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,7 @@ public class AuthService {
 
     public String register(RegisterRequest registerRequest){
         if(userRepository.existsByEmail(registerRequest.getEmail())){
-            throw new RuntimeException("Email already exists");
+            throw new UserAlreadyExistsException("User with email: " + registerRequest.getEmail() + " already exists");
         }
 
         User user = User.builder()

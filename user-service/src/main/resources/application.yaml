@@ -41,4 +41,7 @@ refresh-token:
   cookie-secure: false
 
 frontend:
-  redirect-url: "${FRONTEND_URL}/login"
+  redirect-url: "${FRONTEND_URL:http://localhost:8081}/login"
+
+cors:
+  allowed-origins: "${ALLOWED_ORIGINS:http://localhost:8081}"
