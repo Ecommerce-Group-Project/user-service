@@ -1,6 +1,6 @@
 package com.ecommerce.userservice.config;
 
-import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +12,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -23,32 +22,21 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final GoogleOidcAuthenticationSuccessHandler googleOidcAuthenticationSuccessHandler;
     private final GoogleOidcAuthenticationFailureHandler googleOidcAuthenticationFailureHandler;
+    private final ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Autowired
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
             GoogleOidcAuthenticationSuccessHandler googleOidcAuthenticationSuccessHandler,
-            GoogleOidcAuthenticationFailureHandler googleOidcAuthenticationFailureHandler) {
+            GoogleOidcAuthenticationFailureHandler googleOidcAuthenticationFailureHandler,
+            ApiAuthenticationEntryPoint apiAuthenticationEntryPoint) {
 
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.googleOidcAuthenticationSuccessHandler = googleOidcAuthenticationSuccessHandler;
         this.googleOidcAuthenticationFailureHandler = googleOidcAuthenticationFailureHandler;
+        this.apiAuthenticationEntryPoint = apiAuthenticationEntryPoint;
     }
 
-    @Bean
-    public AuthenticationEntryPoint apiAuthenticationEntryPoint() {
-        return (request, response, authException) -> {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("""
-                    {
-                    "status":401,
-                    "message":"Unauthorized - Invalid or expired token"
-                    }
-                    """);
-
-        };
-    }
 
     /*
        1. Request with no JWT token / Invalid jwt token / expired jwt token
@@ -72,6 +60,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(Customizer.withDefaults())
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 // 1. Disable CSRF (not needed for stateless REST APIs using JWT)
                 .csrf(csrf -> csrf.disable())
                 // 2. Disable form-based login
@@ -87,7 +76,7 @@ public class SecurityConfig {
                                   2. User is NOT authenticated
                                   3. THEN → AuthenticationEntryPoint is called
                                 */
-                                apiAuthenticationEntryPoint(),
+                                apiAuthenticationEntryPoint,
                                 request -> request.getRequestURI().startsWith("/api/")
                         )
                 )
@@ -97,7 +86,7 @@ public class SecurityConfig {
                         .failureHandler(googleOidcAuthenticationFailureHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout", "/h2-console/**").permitAll()
                         .anyRequest().authenticated()
                 );
 

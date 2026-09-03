@@ -1,6 +1,8 @@
 package com.ecommerce.userservice.controller;
 
 
+import com.ecommerce.userservice.config.security.AuthErrorCode;
+import com.ecommerce.userservice.config.security.AuthTokenException;
 import com.ecommerce.userservice.dto.AuthResponse;
 import com.ecommerce.userservice.dto.CurrentUser;
 import com.ecommerce.userservice.dto.LoginRequest;
@@ -8,6 +10,10 @@ import com.ecommerce.userservice.dto.RegisterRequest;
 import com.ecommerce.userservice.entity.User;
 import com.ecommerce.userservice.service.AuthCookieService;
 import com.ecommerce.userservice.service.AuthService;
+import com.ecommerce.userservice.service.RefreshCookieService;
+import com.ecommerce.userservice.service.RefreshTokenService;
+import com.ecommerce.userservice.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,64 +30,98 @@ public class AuthController {
 
     private final AuthService authService;
     private final AuthCookieService authCookieService;
+    private final RefreshCookieService refreshCookieService;
+    private final RefreshTokenService refreshTokenService;
+    private final JwtUtil jwtUtil;
+
+    private static AuthResponse toAuthResponse(User user) {
+        return AuthResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .roles(user.getRoles())
+                .build();
+    }
+
+    private static AuthResponse toAuthResponse(CurrentUser user) {
+        return AuthResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .roles(user.getRoles())
+                .build();
+    }
 
 
     @Autowired
-    public AuthController(AuthService authService,AuthCookieService authCookieService){
+    public AuthController(AuthService authService, AuthCookieService authCookieService, RefreshCookieService refreshCookieService, RefreshTokenService refreshTokenService, JwtUtil jwtUtil) {
         this.authService = authService;
         this.authCookieService = authCookieService;
+        this.refreshCookieService = refreshCookieService;
+        this.refreshTokenService = refreshTokenService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequest request){
+    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authService.register(request));
     }
 
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
-        Map<String,Object> loginResult = authService.login(request);
+        Map<String, Object> loginResult = authService.login(request);
 
         User user = (User) loginResult.get("user");
-        String token = (String) loginResult.get("token");
+        String authToken = (String) loginResult.get("authToken");
+        String refreshToken = (String) loginResult.get("refreshToken");
 
-        AuthResponse authResponse = AuthResponse
-                .builder()
-                .id(user.getId())
-                .name(user.getName())
-                .roles(user.getRoles())
-                .email(user.getEmail())
-                .build();
 
-        ResponseCookie authCookie = authCookieService.createAccessCookie(token);
+        ResponseCookie authCookie = authCookieService.create(authToken);
+        ResponseCookie refreshCookie = refreshCookieService.create(refreshToken);
 
-        return  ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE,authCookie.toString())
-                .body(authResponse);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, authCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(toAuthResponse(user));
 
 
     }
 
     @GetMapping("/me")
-    public ResponseEntity<AuthResponse> me(@AuthenticationPrincipal CurrentUser currentUser){
-        if(currentUser == null){
+    public ResponseEntity<AuthResponse> me(@AuthenticationPrincipal CurrentUser currentUser) {
+        if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        AuthResponse authResponse = AuthResponse.builder()
-                .id(currentUser.getId())
-                .name(currentUser.getName())
-                .email(currentUser.getEmail())
-                .roles(currentUser.getRoles())
-                .build();
-
-        return ResponseEntity.ok(authResponse);
+        return ResponseEntity.ok(toAuthResponse(currentUser));
 
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(HttpServletRequest request) {
+        String rawRefreshToken = refreshCookieService.read(request).orElseThrow(() -> new AuthTokenException(AuthErrorCode.REFRESH_TOKEN_MISSING));
+
+        RefreshTokenService.RotationResult result = refreshTokenService.rotate(rawRefreshToken);
+        User user = result.user();
+        String refreshToken = result.refreshToken();
+
+        String authToken = jwtUtil.generateToken(user.getId(), user.getName(), user.getEmail(), user.getRoles());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, authCookieService.create(authToken).toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookieService.create(refreshToken).toString())
+                .body(toAuthResponse(user));
+
+    }
+
+
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(){
-        return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE,authCookieService.clear().toString()).build();
+    public ResponseEntity<Void> logout() {
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, authCookieService.clear().toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookieService.clear().toString())
+                .build();
     }
 
 }

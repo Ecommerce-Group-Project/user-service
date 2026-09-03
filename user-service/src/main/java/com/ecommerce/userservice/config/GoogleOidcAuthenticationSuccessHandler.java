@@ -5,12 +5,15 @@ import com.ecommerce.userservice.entity.AuthProvider;
 import com.ecommerce.userservice.entity.User;
 import com.ecommerce.userservice.repository.UserRepository;
 import com.ecommerce.userservice.service.AuthCookieService;
+import com.ecommerce.userservice.service.RefreshCookieService;
+import com.ecommerce.userservice.service.RefreshTokenService;
 import com.ecommerce.userservice.util.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
@@ -26,15 +29,23 @@ public class GoogleOidcAuthenticationSuccessHandler implements AuthenticationSuc
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final AuthCookieService authCookieService;
+    private final RefreshCookieService refreshCookieService;
+    private final RefreshTokenService refreshTokenService;
 
     @Value("${frontend.success-redirect-url}")
     private String frontendRedirectUrl;
 
     @Autowired
-    public GoogleOidcAuthenticationSuccessHandler(UserRepository userRepository, JwtUtil jwtUtil, AuthCookieService authCookieService) {
+    public GoogleOidcAuthenticationSuccessHandler(UserRepository userRepository
+            , JwtUtil jwtUtil
+            , AuthCookieService authCookieService
+            , RefreshCookieService refreshCookieService
+            , RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
         this.authCookieService = authCookieService;
+        this.refreshCookieService = refreshCookieService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Override
@@ -60,10 +71,14 @@ public class GoogleOidcAuthenticationSuccessHandler implements AuthenticationSuc
             return userRepository.save(newUser);
         });
 
-        String appAccessToken = jwtUtil.generateToken(user.getId(), user.getName(), user.getEmail(), user.getRoles());
-        ResponseCookie authCookie = authCookieService.createAccessCookie(appAccessToken);
+        String appAuthToken = jwtUtil.generateToken(user.getId(), user.getName(), user.getEmail(), user.getRoles());
+        ResponseCookie authCookie = authCookieService.create(appAuthToken);
 
-        response.addHeader("Set-Cookie", authCookie.toString());
+        String appRefreshToken = refreshTokenService.issue(user);
+        ResponseCookie refreshCookie = refreshCookieService.create(appRefreshToken);
+
+        response.addHeader(HttpHeaders.SET_COOKIE, authCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
         response.sendRedirect(frontendRedirectUrl);
 
 

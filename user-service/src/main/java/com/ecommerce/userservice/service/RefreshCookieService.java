@@ -10,36 +10,33 @@ import java.time.Duration;
 import java.util.Optional;
 
 @Component
-public class AuthCookieService {
+public class RefreshCookieService {
 
-    @Value("${auth.cookie.name}")
+    @Value("${refresh.cookie.name}")
     private String cookieName;
 
-    @Value("${auth.cookie.path}")
+    @Value("${refresh.cookie.path}")
     private String cookiePath;
 
-    @Value("${auth.cookie.ttl-minutes}")
+    @Value("${refresh.cookie.ttl-minutes}")
     private long cookieTtlMinutes;
 
-    @Value("${auth.cookie.secure}")
+    @Value("${refresh.cookie.secure}")
     private boolean secure;
 
-    @Value("${auth.cookie.same-site}")
+    @Value("${refresh.cookie.same-site}")
     private String sameSite;
 
     public String getCookieName() {
         return cookieName;
     }
 
-    public ResponseCookie create(String accessToken) {
-        return base(accessToken)
+    public ResponseCookie create(String refreshToken) {
+        return base(refreshToken)
                 .maxAge(Duration.ofMinutes(cookieTtlMinutes))
                 .build();
     }
 
-    /**
-     * Path must match create() exactly or the browser ignores the deletion.
-     */
     public ResponseCookie clear() {
         return base("").maxAge(0).build();
     }
@@ -56,9 +53,6 @@ public class AuthCookieService {
         return Optional.empty();
     }
 
-    /**
-     * ResponseCookie.maxAge(long) is in SECONDS - always pass a Duration instead.
-     */
     private ResponseCookie.ResponseCookieBuilder base(String value) {
         return ResponseCookie.from(cookieName, value)
                 .httpOnly(true)

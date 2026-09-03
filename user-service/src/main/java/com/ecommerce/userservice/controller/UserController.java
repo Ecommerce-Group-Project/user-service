@@ -16,12 +16,12 @@ public class UserController {
 
     private final UserService userService;
 
-    public UserController(UserService userService){
+    public UserController(UserService userService) {
         this.userService = userService;
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<ProfileResponse> getProfile(@AuthenticationPrincipal CurrentUser currentUser){
+    @GetMapping("/profile")
+    public ResponseEntity<ProfileResponse> getProfile(@AuthenticationPrincipal CurrentUser currentUser) {
         return ResponseEntity.ok(userService.getProfileData(currentUser.getId()));
     }
 }

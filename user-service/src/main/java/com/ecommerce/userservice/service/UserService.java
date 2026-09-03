@@ -13,18 +13,18 @@ public class UserService {
     private final UserRepository userRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository){
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    public ProfileResponse getProfileData(Long userId){
-        User userDetails = userRepository.findById(userId).orElseThrow(()-> new RuntimeException("User not found"));
+    public ProfileResponse getProfileData(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         return ProfileResponse
                 .builder()
-                .email(userDetails.getEmail())
-                .roles(userDetails.getRoles())
-                .name(userDetails.getName())
+                .email(user.getEmail())
+                .roles(user.getRoles())
+                .name(user.getName())
                 .build();
     }
 

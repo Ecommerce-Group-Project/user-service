@@ -1,8 +1,14 @@
 package com.ecommerce.userservice.exception;
 
+import com.ecommerce.userservice.config.security.AuthErrorCode;
+import com.ecommerce.userservice.config.security.AuthErrorResponse;
+import com.ecommerce.userservice.config.security.AuthTokenException;
+import com.ecommerce.userservice.service.AuthCookieService;
+import com.ecommerce.userservice.service.RefreshCookieService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -20,6 +26,14 @@ import java.util.List;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private final AuthCookieService authCookieService;
+    private final RefreshCookieService refreshCookieService;
+
+    public GlobalExceptionHandler(AuthCookieService authCookieService, RefreshCookieService refreshCookieService) {
+        this.authCookieService = authCookieService;
+        this.refreshCookieService = refreshCookieService;
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
@@ -60,6 +74,25 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
+
+
+    @ExceptionHandler(AuthTokenException.class)
+    public ResponseEntity<AuthErrorResponse> handleAuthTokenException(AuthTokenException exception, HttpServletRequest request) {
+        AuthErrorCode code = exception.getErrorCode();
+        ResponseEntity.BodyBuilder builder = ResponseEntity.status(HttpStatus.UNAUTHORIZED);
+
+        if (code == AuthErrorCode.REFRESH_TOKEN_EXPIRED
+                || code == AuthErrorCode.REFRESH_TOKEN_INVALID
+                || code == AuthErrorCode.REFRESH_TOKEN_REUSED) {
+            builder.header(HttpHeaders.SET_COOKIE, authCookieService.clear().toString());
+            builder.header(HttpHeaders.SET_COOKIE, refreshCookieService.clear().toString());
+
+        }
+
+        return builder.body(AuthErrorResponse.create(code));
+
+    }
+
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleAuthenticationException(
@@ -149,7 +182,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(UserAlreadyExistsException exception,HttpServletRequest request){
+    public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(UserAlreadyExistsException exception, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(
                 LocalDateTime.now(),
                 HttpStatus.CONFLICT.value(),
@@ -169,7 +202,7 @@ public class GlobalExceptionHandler {
 
         ErrorResponse response = buildErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                exception.getMessage() !=null ? exception.getMessage() : "Something went wrong. Please try again later.",
+                exception.getMessage() != null ? exception.getMessage() : "Something went wrong. Please try again later.",
                 request.getRequestURI(),
                 List.of()
         );

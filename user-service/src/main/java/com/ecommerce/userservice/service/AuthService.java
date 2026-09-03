@@ -24,14 +24,16 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
+    private final RefreshTokenService refreshTokenService;
 
 
     @Autowired
-    public AuthService(JwtUtil jwtUtil, PasswordEncoder passwordEncoder, UserRepository userRepository, AuthenticationManager authenticationManager) {
+    public AuthService(JwtUtil jwtUtil, PasswordEncoder passwordEncoder, UserRepository userRepository, AuthenticationManager authenticationManager,RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public String register(RegisterRequest registerRequest){
@@ -61,9 +63,11 @@ public class AuthService {
         // We just fetch the user from the DB one more time to grab their ID and Role for the JWT payload.
            User user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow(()-> new UsernameNotFoundException("User not found"));
 
-           String token = jwtUtil.generateToken(user.getId(), user.getName(),user.getEmail(),user.getRoles());
+           String authToken = jwtUtil.generateToken(user.getId(), user.getName(),user.getEmail(),user.getRoles());
+           String refreshToken = refreshTokenService.issue(user);
 
-           return Map.of("token", token,"user",user);
+
+           return Map.of("authToken", authToken,"refreshToken",refreshToken,"user",user);
     }
 
 
