@@ -86,7 +86,16 @@ public class SecurityConfig {
                         .failureHandler(googleOidcAuthenticationFailureHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout", "/h2-console/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers(
+                                "/api/auth/login"
+                                , "/api/auth/register"
+                                , "/api/auth/refresh"
+                                , "/api/auth/logout"
+                                , "/api/auth/forgot-password"
+                                , "/api/auth/reset-password"
+                                , "/api/auth/reset-password/validate"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 );
 

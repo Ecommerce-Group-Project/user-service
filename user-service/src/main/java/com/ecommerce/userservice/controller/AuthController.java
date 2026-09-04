@@ -3,17 +3,12 @@ package com.ecommerce.userservice.controller;
 
 import com.ecommerce.userservice.config.security.AuthErrorCode;
 import com.ecommerce.userservice.config.security.AuthTokenException;
-import com.ecommerce.userservice.dto.AuthResponse;
-import com.ecommerce.userservice.dto.CurrentUser;
-import com.ecommerce.userservice.dto.LoginRequest;
-import com.ecommerce.userservice.dto.RegisterRequest;
+import com.ecommerce.userservice.dto.*;
 import com.ecommerce.userservice.entity.User;
-import com.ecommerce.userservice.service.AuthCookieService;
-import com.ecommerce.userservice.service.AuthService;
-import com.ecommerce.userservice.service.RefreshCookieService;
-import com.ecommerce.userservice.service.RefreshTokenService;
+import com.ecommerce.userservice.service.*;
 import com.ecommerce.userservice.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -32,7 +27,9 @@ public class AuthController {
     private final AuthCookieService authCookieService;
     private final RefreshCookieService refreshCookieService;
     private final RefreshTokenService refreshTokenService;
+    private final PasswordResetService passwordResetService;
     private final JwtUtil jwtUtil;
+    private static final String GENERIC_FORGOT_RESPONSE = "Reset link has been sent to your email.";
 
     private static AuthResponse toAuthResponse(User user) {
         return AuthResponse.builder()
@@ -54,12 +51,13 @@ public class AuthController {
 
 
     @Autowired
-    public AuthController(AuthService authService, AuthCookieService authCookieService, RefreshCookieService refreshCookieService, RefreshTokenService refreshTokenService, JwtUtil jwtUtil) {
+    public AuthController(AuthService authService, AuthCookieService authCookieService, RefreshCookieService refreshCookieService, RefreshTokenService refreshTokenService, JwtUtil jwtUtil, PasswordResetService passwordResetService) {
         this.authService = authService;
         this.authCookieService = authCookieService;
         this.refreshCookieService = refreshCookieService;
         this.refreshTokenService = refreshTokenService;
         this.jwtUtil = jwtUtil;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/register")
@@ -123,5 +121,35 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, refreshCookieService.clear().toString())
                 .build();
     }
+
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request) {
+
+        passwordResetService.sendPasswordResetEmail(request.getEmail());
+
+        // Same 200, same body, same timing — whether or not the account exists.
+        return ResponseEntity.ok(Map.of("message", GENERIC_FORGOT_RESPONSE));
+    }
+
+    @GetMapping("/reset-password/validate")
+    public ResponseEntity<Void> validateResetToken(@RequestParam String token) {
+        passwordResetService.validateToken(token);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request) {
+
+        passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
+
+        // Clear whatever auth cookie this browser holds and force a fresh login.
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, authCookieService.clear().toString())
+                .body(Map.of("message", "Password updated. Please sign in."));
+    }
+
 
 }

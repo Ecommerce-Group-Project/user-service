@@ -15,9 +15,10 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
 
     Optional<PasswordResetToken> findByTokenHash(String tokenHash);
 
-    /**
-     * Used for the resend cooldown.
-     */
+    //    SELECT * FROM password_reset_tokens
+    //    WHERE user_id = ?
+    //    ORDER BY created_at DESC
+    //    LIMIT 1;
     Optional<PasswordResetToken> findTopByUserIdOrderByCreatedAtDesc(Long userId);
 
     /**
