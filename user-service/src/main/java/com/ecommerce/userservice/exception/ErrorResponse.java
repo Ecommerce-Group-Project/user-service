@@ -1,11 +1,11 @@
 package com.ecommerce.userservice.exception;
 
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 public record ErrorResponse(
-        LocalDateTime timestamp,
+        Instant timestamp,
         int status,
         String error,
         String message,

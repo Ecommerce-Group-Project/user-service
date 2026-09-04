@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -183,14 +184,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(UserAlreadyExistsException exception, HttpServletRequest request) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.CONFLICT.value(),
-                HttpStatus.CONFLICT.getReasonPhrase(),
+
+        ErrorResponse response = buildErrorResponse(
+                HttpStatus.CONFLICT,
                 exception.getMessage(),
                 request.getRequestURI(),
                 List.of()
-        ));
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+
     }
 
     @ExceptionHandler(Exception.class)
@@ -210,6 +213,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
+    @ExceptionHandler(InvalidPasswordResetTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidResetToken(
+            InvalidPasswordResetTokenException exception,
+            HttpServletRequest request
+    ) {
+        log.warn("Invalid password reset token used");   // warn, not error — this is expected traffic
+
+        ErrorResponse response = buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                exception.getMessage(),
+                request.getRequestURI(),
+                List.of()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
     private ErrorResponse buildErrorResponse(
             HttpStatus status,
             String message,
@@ -217,7 +237,7 @@ public class GlobalExceptionHandler {
             List<String> details
     ) {
         return new ErrorResponse(
-                LocalDateTime.now(),
+                Instant.now(),
                 status.value(),
                 status.getReasonPhrase(),
                 message,

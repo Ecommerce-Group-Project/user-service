@@ -20,6 +20,23 @@ spring:
     hibernate:
       ddl-auto: update
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}          # your.address@gmail.com
+    password: ${MAIL_APP_PASSWORD}      # 16-char app password, spaces removed
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+
   security:
     oauth2:
       client:
@@ -62,3 +79,12 @@ frontend:
 
 cors:
   allowed-origins: "${ALLOWED_ORIGINS:http://localhost:8081}"
+
+app:
+  mail:
+    from-name: "MotoXpress"
+  frontend:
+    reset-password-url: ${FRONTEND_BASE_URL:http://localhost:8081}/reset-password
+  password-reset:
+    token-ttl-minutes: 30
+    resend-cooldown-seconds: 60

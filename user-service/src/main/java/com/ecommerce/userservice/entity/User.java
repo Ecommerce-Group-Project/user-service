@@ -1,7 +1,9 @@
 package com.ecommerce.userservice.entity;
+
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +21,7 @@ public class User {
 
     private String name;
 
-    @Column(unique = true,nullable = false)
+    @Column(unique = true, nullable = false)
     private String email;
 
 
@@ -35,6 +37,8 @@ public class User {
     @Builder.Default
     private AuthProvider authProvider = AuthProvider.LOCAL;
 
+
+    private Instant passwordChangedAt;
 
 
 }
