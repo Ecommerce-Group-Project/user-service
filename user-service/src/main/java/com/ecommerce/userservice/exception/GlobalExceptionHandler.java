@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j

@@ -12,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -60,23 +59,5 @@ public class JwtUtil {
                 .getPayload();
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        return claimsResolver.apply(extractAllClaims(token));
-    }
 
-    public Long extractUserId(String token) {
-        return Long.parseLong(extractClaim(token, Claims::getSubject));
-    }
-
-    public List<String> extractRoles(String token) {
-        return List.of(extractAllClaims(token).get("roles", String.class).split(","));
-    }
-
-    public String extractUserEmail(String token) {
-        return extractAllClaims(token).get("email", String.class);
-    }
-
-    public String extractUserName(String token) {
-        return extractAllClaims(token).get("name", String.class);
-    }
 }

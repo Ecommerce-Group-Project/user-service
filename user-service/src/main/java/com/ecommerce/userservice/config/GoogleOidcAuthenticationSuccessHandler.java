@@ -12,6 +12,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+@NullMarked
 @Slf4j
 @Component
 public class GoogleOidcAuthenticationSuccessHandler implements AuthenticationSuccessHandler {

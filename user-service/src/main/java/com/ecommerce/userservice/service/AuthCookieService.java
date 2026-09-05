@@ -27,9 +27,6 @@ public class AuthCookieService {
     @Value("${auth.cookie.same-site}")
     private String sameSite;
 
-    public String getCookieName() {
-        return cookieName;
-    }
 
     public ResponseCookie create(String accessToken) {
         return base(accessToken)

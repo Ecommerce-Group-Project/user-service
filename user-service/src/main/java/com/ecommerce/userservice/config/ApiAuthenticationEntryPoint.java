@@ -4,6 +4,7 @@ import com.ecommerce.userservice.config.security.AuthErrorCode;
 import com.ecommerce.userservice.config.security.AuthErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
@@ -14,6 +15,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+@NullMarked
 @Component
 public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
@@ -34,8 +36,7 @@ public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
         Object attribute = request.getAttribute(AuthErrorCode.REQUEST_ATTRIBUTE);
 
         if (attribute instanceof AuthErrorCode) {
-            AuthErrorCode code = (AuthErrorCode) attribute;
-            errorCode = code;
+            errorCode = (AuthErrorCode) attribute;
         }
 
 
