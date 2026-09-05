@@ -11,6 +11,7 @@ import com.ecommerce.userservice.util.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 public class GoogleOidcAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
@@ -47,6 +49,7 @@ public class GoogleOidcAuthenticationSuccessHandler implements AuthenticationSuc
         this.refreshCookieService = refreshCookieService;
         this.refreshTokenService = refreshTokenService;
     }
+
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -79,6 +82,8 @@ public class GoogleOidcAuthenticationSuccessHandler implements AuthenticationSuc
 
         response.addHeader(HttpHeaders.SET_COOKIE, authCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+        log.info("Google sign-in successful: userId={}", user.getId());                       // (4)
+
         response.sendRedirect(frontendRedirectUrl);
 
 

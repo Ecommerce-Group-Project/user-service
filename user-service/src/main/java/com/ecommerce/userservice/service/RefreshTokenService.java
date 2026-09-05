@@ -50,7 +50,6 @@ public class RefreshTokenService {
                 .build());
 
         // Only the hash is stored. This is the one and only time the raw value exists.
-        System.out.printf("ISSUED raw=%s hash=%s%n", rawToken, hash(rawToken));
         return rawToken;
     }
 
@@ -63,7 +62,6 @@ public class RefreshTokenService {
     public RotationResult rotate(String rawToken) {
 
         String hash = hash(rawToken);
-        System.out.printf("RECEIVED raw=%s hash=%s%n", rawToken, hash(rawToken));
 
         RefreshToken stored = refreshTokenRepository.findByTokenHash(hash)
                 .orElseThrow(() -> new AuthTokenException(AuthErrorCode.REFRESH_TOKEN_INVALID));

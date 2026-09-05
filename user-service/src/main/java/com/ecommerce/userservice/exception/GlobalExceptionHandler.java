@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException exception,
             HttpServletRequest request
     ) {
-        log.error("Validation error occurred", exception);
+        log.warn("Validation error occurred", exception);
 
         List<String> details = exception.getBindingResult()
                 .getFieldErrors()
@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
             BadCredentialsException exception,
             HttpServletRequest request
     ) {
-        log.error("Bad credentials", exception);
+        log.warn("Bad credentials", exception);
 
         ErrorResponse response = buildErrorResponse(
                 HttpStatus.UNAUTHORIZED,
@@ -79,7 +79,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthTokenException.class)
     public ResponseEntity<AuthErrorResponse> handleAuthTokenException(AuthTokenException exception, HttpServletRequest request) {
+
+
         AuthErrorCode code = exception.getErrorCode();
+        log.warn("Auth token error occurred {}", code, exception);
         ResponseEntity.BodyBuilder builder = ResponseEntity.status(HttpStatus.UNAUTHORIZED);
 
         if (code == AuthErrorCode.REFRESH_TOKEN_EXPIRED
@@ -100,7 +103,7 @@ public class GlobalExceptionHandler {
             AuthenticationException exception,
             HttpServletRequest request
     ) {
-        log.error("Authentication error occurred", exception);
+        log.warn("Authentication error occurred", exception);
 
         ErrorResponse response = buildErrorResponse(
                 HttpStatus.UNAUTHORIZED,
@@ -117,7 +120,7 @@ public class GlobalExceptionHandler {
             AccessDeniedException exception,
             HttpServletRequest request
     ) {
-        log.error("Access denied", exception);
+        log.warn("Access denied", exception);
 
         ErrorResponse response = buildErrorResponse(
                 HttpStatus.FORBIDDEN,
@@ -151,7 +154,7 @@ public class GlobalExceptionHandler {
             MethodArgumentTypeMismatchException exception,
             HttpServletRequest request
     ) {
-        log.error("Invalid request parameter type", exception);
+        log.warn("Invalid request parameter type", exception);
 
         String message = "Invalid value for parameter: " + exception.getName();
 
@@ -170,7 +173,7 @@ public class GlobalExceptionHandler {
             IllegalArgumentException exception,
             HttpServletRequest request
     ) {
-        log.error("Illegal argument exception occurred", exception);
+        log.warn("Illegal argument exception occurred", exception);
 
         ErrorResponse response = buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
@@ -196,6 +199,23 @@ public class GlobalExceptionHandler {
 
     }
 
+    @ExceptionHandler(InvalidPasswordResetTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidResetToken(
+            InvalidPasswordResetTokenException exception,
+            HttpServletRequest request
+    ) {
+        log.warn("Invalid password reset token used");
+
+        ErrorResponse response = buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                exception.getMessage(),
+                request.getRequestURI(),
+                List.of()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception exception,
@@ -213,22 +233,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-    @ExceptionHandler(InvalidPasswordResetTokenException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidResetToken(
-            InvalidPasswordResetTokenException exception,
-            HttpServletRequest request
-    ) {
-        log.warn("Invalid password reset token used");   // warn, not error — this is expected traffic
-
-        ErrorResponse response = buildErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                exception.getMessage(),
-                request.getRequestURI(),
-                List.of()
-        );
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    }
 
     private ErrorResponse buildErrorResponse(
             HttpStatus status,

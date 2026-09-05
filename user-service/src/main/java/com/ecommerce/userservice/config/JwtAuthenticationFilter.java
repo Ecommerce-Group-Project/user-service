@@ -12,6 +12,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -83,7 +85,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (ExpiredJwtException e) {
             fail(request, AuthErrorCode.ACCESS_TOKEN_EXPIRED);
+            log.debug("Access token expired for {}", request.getRequestURI());
         } catch (JwtException | IllegalArgumentException e) {
+            log.warn("Invalid access token for {}: {}", request.getRequestURI(), e.getMessage());
             fail(request, AuthErrorCode.ACCESS_TOKEN_INVALID);
         }
 

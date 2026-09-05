@@ -136,7 +136,7 @@ public class AuthController {
     @GetMapping("/reset-password/validate")
     public ResponseEntity<Void> validateResetToken(@RequestParam String token) {
         passwordResetService.validateToken(token);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/reset-password")

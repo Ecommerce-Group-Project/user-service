@@ -2,6 +2,7 @@ package com.ecommerce.userservice.config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+@Slf4j
 @Component
 public class GoogleOidcAuthenticationFailureHandler implements AuthenticationFailureHandler {
 
@@ -21,9 +23,8 @@ public class GoogleOidcAuthenticationFailureHandler implements AuthenticationFai
     public void onAuthenticationFailure(HttpServletRequest request,
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
-
+        log.error("Google OIDC authentication failed", exception);
         String errorMessage = exception.getMessage();
-        System.out.println("Google OIDC Authentication Failure: " + errorMessage);
         String redirectUrl = frontendRedirectUrl + "?error=" +
                 URLEncoder.encode(errorMessage, StandardCharsets.UTF_8);
 

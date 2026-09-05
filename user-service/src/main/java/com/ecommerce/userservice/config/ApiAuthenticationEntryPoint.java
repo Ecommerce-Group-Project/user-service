@@ -31,18 +31,15 @@ public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
         AuthErrorCode errorCode = AuthErrorCode.UNAUTHENTICATED;
 
-//        Object attribute = request.getAttribute(AuthErrorCode.REQUEST_ATTRIBUTE);
-//
-//        if (attribute instanceof AuthErrorCode) {
-//            AuthErrorCode code = (AuthErrorCode) attribute;
-//            errorCode = code;
-//        }
-        // long version of this code is shown above
-        if (request.getAttribute(AuthErrorCode.REQUEST_ATTRIBUTE) instanceof AuthErrorCode code) {
+        Object attribute = request.getAttribute(AuthErrorCode.REQUEST_ATTRIBUTE);
+
+        if (attribute instanceof AuthErrorCode) {
+            AuthErrorCode code = (AuthErrorCode) attribute;
             errorCode = code;
         }
 
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); //SC_UNAUTHORIZED = 401
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         objectMapper.writeValue(response.getOutputStream(), AuthErrorResponse.create(errorCode));
