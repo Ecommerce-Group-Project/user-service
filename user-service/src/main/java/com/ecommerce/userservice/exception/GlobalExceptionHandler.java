@@ -46,7 +46,7 @@ public class GlobalExceptionHandler {
         List<String> details = exception.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(this::formatFieldError)
+                .map(fieldError -> formatFieldError(fieldError))
                 .toList();
 
         ErrorResponse response = buildErrorResponse(

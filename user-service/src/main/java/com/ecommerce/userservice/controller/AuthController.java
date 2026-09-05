@@ -1,6 +1,5 @@
 package com.ecommerce.userservice.controller;
 
-
 import com.ecommerce.userservice.config.security.AuthErrorCode;
 import com.ecommerce.userservice.config.security.AuthTokenException;
 import com.ecommerce.userservice.dto.*;
@@ -61,13 +60,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authService.register(request));
     }
 
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         Map<String, Object> loginResult = authService.login(request);
 
         User user = (User) loginResult.get("user");
